@@ -16,23 +16,33 @@ const SimulationPage = () => {
     const [isSidebarVisible, setIsSidebarVisible] = useState(false);
     const [isDialogVisible, setIsDialogVisible] = useState(false);
     const [newSimulationData, setNewSimulationData] = useState({ anneeFiscale: '', description: '', simulation: true });
-    const [copyFromScenarioId, setCopyFromScenarioId] = useState(null); // Separate state for scenario to copy from
+    const [copyFromScenarioId, setCopyFromScenarioId] = useState(null);
     const { data: scenariosData, isLoading, isError, refetch } = apiSlice.useFetchDataQuery('scenarios');
     const { copyData } = useCopyScenarioData();
 
     const simulationScenarios = scenariosData?.filter(scenario => scenario.simulation === true) || [];
     const allScenariosOptions = scenariosData?.map(scenario => ({ label: scenario.anneeFiscale, value: scenario.id })) || [];
 
-    const handleCreateSimulation = async () => {
-        try {
-            console.log(newSimulationData);
-            const createdScenario = await copyData(selectedScenarioId, newSimulationData);
+    // Function to handle simulation selection and sidebar visibility
+    const handleSimulationSelect = (id) => {
+        setSelectedScenarioId(id);
+        setIsSidebarVisible(false); // This will close the sidebar upon selection
+    };
 
-            refetch();
-            setSelectedScenarioId(createdScenario.id);
-            setIsDialogVisible(false);
-        } catch (error) {
-            console.error('Error in creating simulation:', error);
+    const handleCreateSimulation = async () => {
+        console.log("Scenario ID to Copy From: ", copyFromScenarioId);
+
+        if (copyFromScenarioId) {
+            try {
+                const createdScenario = await copyData(copyFromScenarioId, newSimulationData);
+                refetch();
+                setSelectedScenarioId(createdScenario.idScenario);
+                setIsDialogVisible(false);
+            } catch (error) {
+                console.error('Error in creating simulation:', error);
+            }
+        } else {
+            console.error('No scenario selected to copy from');
         }
     };
 
@@ -44,7 +54,10 @@ const SimulationPage = () => {
             <Button label="Select Simulation" onClick={() => setIsSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onHide={() => setIsSidebarVisible(false)}>
                 {simulationScenarios.map(scenario => (
-                    <Button key={scenario.id} label={scenario.anneeFiscale} onClick={() => setSelectedScenarioId(scenario.id)} className="p-button-text" />
+                    <Button key={scenario.id}
+                        label={scenario.anneeFiscale}
+                        onClick={() => handleSimulationSelect(scenario.id)}
+                        className="p-button-text" />
                 ))}
                 <Button label="Create New Simulation" onClick={() => setIsDialogVisible(true)} />
             </Sidebar>
@@ -54,9 +67,7 @@ const SimulationPage = () => {
                     <h3>New Scenario Details</h3>
                     <InputText placeholder="Fiscal Year" value={newSimulationData.anneeFiscale} onChange={(e) => setNewSimulationData({ ...newSimulationData, anneeFiscale: e.target.value })} />
                     <InputText placeholder="Description" value={newSimulationData.description} onChange={(e) => setNewSimulationData({ ...newSimulationData, description: e.target.value })} />
-
                     <Dropdown value={copyFromScenarioId} options={allScenariosOptions} onChange={(e) => setCopyFromScenarioId(e.value)} placeholder="Select a Scenario to Copy From" />
-
                     <Button label="Create" onClick={handleCreateSimulation} />
                 </div>
             </Dialog>

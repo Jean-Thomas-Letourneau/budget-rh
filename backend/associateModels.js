@@ -18,6 +18,9 @@ const associateModels = () => {
     FondsDebit.hasOne(Deduction, { foreignKey: 'idFondsDebit' });
     Deduction.belongsTo(FondsDebit, { foreignKey: 'idFondsDebit' });
 
+    Scenario.hasMany(FondsCredit, { foreignKey: 'idScenario' });
+    FondsCredit.belongsTo(Scenario, { foreignKey: 'idScenario' });
+
     FondsCredit.hasMany(FondsDebit, { foreignKey: 'idFondsCredit' });
     FondsDebit.belongsTo(FondsCredit, { foreignKey: 'idFondsCredit' });
 };
