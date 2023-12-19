@@ -4,10 +4,11 @@ const cors = require('cors');
 const socketIo = require('socket.io');
 
 const employeRoutes = require('./routes/employeRoutes');
-const composantRoutes = require('./routes/composantRoutes'); // Corrected
-const fondsDebitRoutes = require('./routes/fondsDebitRoutes'); // Corrected
-const deductionRoutes = require('./routes/deductionRoutes'); // Corrected
-const fondsCreditRoutes = require('./routes/fondsCreditRoutes'); // Corrected
+const composantRoutes = require('./routes/composantRoutes');
+const fondsDebitRoutes = require('./routes/fondsDebitRoutes');
+const deductionRoutes = require('./routes/deductionRoutes');
+const fondsCreditRoutes = require('./routes/fondsCreditRoutes');
+const scenarioRoutes = require('./routes/scenarioRoutes');
 
 const associateModels = require('./associateModels');
 associateModels();
@@ -30,6 +31,7 @@ app.use(composantRoutes);
 app.use(fondsDebitRoutes);
 app.use(deductionRoutes);
 app.use(fondsCreditRoutes);
+app.use(scenarioRoutes);
 
 // Socket.IO
 io.on('connection', (socket) => {

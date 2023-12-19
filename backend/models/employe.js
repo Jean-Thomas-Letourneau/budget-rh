@@ -7,8 +7,9 @@ Employe.init({
     nom: DataTypes.STRING,
     prenom: DataTypes.STRING,
     genre: DataTypes.STRING,
-    retraitePartielle: DataTypes.BOOLEAN,
-    retraiteComplete: DataTypes.BOOLEAN,
+    retraitePartielle: DataTypes.DATE,
+    retraiteComplete: DataTypes.DATE,
+    selected: DataTypes.BOOLEAN,
 }, { sequelize: sequelize, modelName: 'employe' });
 
 module.exports = Employe;

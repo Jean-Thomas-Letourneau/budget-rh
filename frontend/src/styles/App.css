@@ -32,7 +32,42 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Add this to your CSS file */
+.table-header {
+  font-size: 20px;
+  font-weight: bold;
+  padding-left: 10px;
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #ddd;
+}
+
+.child-table {
+  margin-left: 20px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.child-table .p-datatable-header {
+  background-color: #e9ecef;
+  font-weight: normal;
+  font-size: 18px;
+  padding-left: 20px;
+  /* Additional padding to visually indent the title */
+}
+
+.child-table .p-datatable-tbody tr {
+  background-color: #ffffff;
+  /* White for child rows */
+}
+
+.parent-table .p-datatable-tbody tr {
+  background-color: #f9f9f9;
+  /* Lighter grey for parent rows */
 }

@@ -1,77 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { apiSlice } from '../api/apiSlice'; // Import your API slice
+import React, { useState } from 'react';
+import { apiSlice } from '../api/apiSlice';
 import EmployeeDataTable from '../components/EmployeeDataTable';
 import { Dropdown } from 'primereact/dropdown';
-import 'primereact/resources/themes/saga-blue/theme.css';  // theme
-import 'primereact/resources/primereact.min.css';          // core css
-import 'primeicons/primeicons.css';                        // icons
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 const SummaryPage = () => {
-    const [treeData, setTreeData] = useState([]);
-    const [filteredTreeData, setFilteredTreeData] = useState([]);
+    const [selectedScenarioId, setSelectedScenarioId] = useState(null);
+    const { data: scenariosData, isLoading, isError } = apiSlice.useFetchDataQuery('scenarios');
 
-    const [selectedYear, setSelectedYear] = useState(null);
-    const yearOptions = [
-        { label: '2021', value: '2021' },
-        { label: '2022', value: '2022' },
-        { label: '2023', value: '2023' },
-        { label: '2024', value: '2024' },
-        { label: '2025', value: '2025' }
-    ];
+    // Filter scenarios to keep only those with simulation = false
+    const filteredScenarios = scenariosData?.filter(scenario => scenario.simulation === false) || [];
+    const yearOptions = filteredScenarios.map(scenario => ({
+        label: scenario.anneeFiscale,
+        value: scenario.id
+    }));
 
-    const { data: employeesData } = apiSlice.useFetchDataQuery('employes');
-    const { data: composantsData } = apiSlice.useFetchDataQuery('composants');
-    const { data: fondsDebitsData } = apiSlice.useFetchDataQuery('fondsDebits');
+    // Find the selected scenario to pass its simulation property
+    const selectedScenario = filteredScenarios.find(scenario => scenario.id === selectedScenarioId);
 
-    useEffect(() => {
-        if (employeesData && composantsData && fondsDebitsData) {
-            const employeeNodes = employeesData.map((employe) => {
-                const employeComposants = composantsData.filter(
-                    (composant) => composant.idEmploye === employe.id
-                ).map((composant) => {
-                    const composantFondsDebits = fondsDebitsData.filter(
-                        (fondsDebit) => fondsDebit.idComposant === composant.id
-                    );
-                    return {
-                        ...composant,
-                        fondsDebits: composantFondsDebits
-                    };
-                });
-
-                return {
-                    ...employe,
-                    composants: employeComposants
-                };
-            });
-
-            setTreeData(employeeNodes);
-        }
-    }, [employeesData, composantsData, fondsDebitsData]);
-
-    useEffect(() => {
-        if (!selectedYear) {
-            setFilteredTreeData(treeData); // No year selected, show all data
-        } else {
-            const filteredData = treeData.map(employee => ({
-                ...employee,
-                composants: employee.composants.filter(composant => composant.anneeFiscale === selectedYear)
-            }));
-            setFilteredTreeData(filteredData);
-        }
-    }, [selectedYear, treeData]);
-
-    //if (isLoading) return <p>Loading...</p>;
-    //if (isError) return <p>Error loading data.</p>;
+    if (isLoading) return <p>Loading...</p>;
+    if (isError) return <p>Error loading scenarios.</p>;
 
     return (
         <div>
             <Dropdown
-                value={selectedYear}
+                value={selectedScenarioId}
                 options={yearOptions}
-                onChange={(e) => setSelectedYear(e.value)}
-                placeholder="Select a year"
+                onChange={(e) => setSelectedScenarioId(e.value)}
+                placeholder="Select a Scenario"
             />
-            <EmployeeDataTable employees={filteredTreeData} />
+            {selectedScenarioId && <EmployeeDataTable idScenario={selectedScenarioId} simulation={selectedScenario?.simulation} />}
         </div>
     );
 };

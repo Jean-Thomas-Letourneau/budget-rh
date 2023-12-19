@@ -9,6 +9,7 @@ FondsCredit.init({
     montant: DataTypes.DECIMAL(10, 2),
     anneeFiscale: DataTypes.INTEGER,
     description: DataTypes.TEXT,
+    selected: DataTypes.BOOLEAN,
 }, { sequelize, modelName: 'fondsCredit' });
 
 module.exports = FondsCredit;

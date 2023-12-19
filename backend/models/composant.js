@@ -13,7 +13,7 @@ Composant.init({
     echelon: DataTypes.STRING,
     bilingue: DataTypes.BOOLEAN,
     salaire: DataTypes.DECIMAL(10, 2),
-    anneeFiscale: DataTypes.STRING,
+    selected: DataTypes.BOOLEAN,
 }, { sequelize, modelName: 'composant' });
 
 module.exports = Composant;

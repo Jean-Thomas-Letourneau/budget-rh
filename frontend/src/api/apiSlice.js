@@ -32,6 +32,13 @@ export const apiSlice = createApi({
             }),
             invalidatesTags: (result, error, { modelName, id }) => [{ type: modelName, id }],
         }),
+        copyScenarioData: builder.mutation({
+            query: ({ id, data }) => ({
+                url: `/scenarios/${id}/copy`,
+                method: 'POST',
+                body: data,
+            }),
+        }),
     }),
 });
 

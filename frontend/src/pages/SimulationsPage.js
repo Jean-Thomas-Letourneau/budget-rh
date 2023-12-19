@@ -1,80 +1,69 @@
-import React, { useEffect, useState } from 'react';
-import { useFetchDataQuery } from '../api/apiSlice';
-import SimulationEmployeeDataTable from '../components/SimulationEmployeeDataTable';
-import { ProgressBar } from 'primereact/progressbar';
+import React, { useState, useEffect } from 'react';
+import { apiSlice } from '../api/apiSlice';
+import { useCopyScenarioData } from '../hooks/useCopyScenarioData';
+import EmployeeDataTable from '../components/EmployeeDataTable';
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { Sidebar } from 'primereact/sidebar';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
-const SimulationsPage = () => {
-    const { data: employeesData, isLoading: isLoadingEmployees, isSuccess: isSuccessEmployees } = useFetchDataQuery('employes');
-    const { data: composantsData, isLoading: isLoadingComposants, isSuccess: isSuccessComposants } = useFetchDataQuery('composants');
-    const { data: fondsDebitsData, isLoading: isLoadingFondsDebits, isSuccess: isSuccessFondsDebits } = useFetchDataQuery('fondsDebits');
+const SimulationPage = () => {
+    const [selectedScenarioId, setSelectedScenarioId] = useState(null);
+    const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+    const [isDialogVisible, setIsDialogVisible] = useState(false);
+    const [newSimulationData, setNewSimulationData] = useState({ anneeFiscale: '', description: '', simulation: true });
+    const [copyFromScenarioId, setCopyFromScenarioId] = useState(null); // Separate state for scenario to copy from
+    const { data: scenariosData, isLoading, isError, refetch } = apiSlice.useFetchDataQuery('scenarios');
+    const { copyData } = useCopyScenarioData();
 
-    const [treeData, setTreeData] = useState([]);
-    const [totalCosts, setTotalCosts] = useState(0);
+    const simulationScenarios = scenariosData?.filter(scenario => scenario.simulation === true) || [];
+    const allScenariosOptions = scenariosData?.map(scenario => ({ label: scenario.anneeFiscale, value: scenario.id })) || [];
 
-    useEffect(() => {
-        if (isSuccessEmployees && isSuccessComposants && isSuccessFondsDebits) {
-            const employeeNodes = employeesData.map((employe) => {
-                const employeComposants = composantsData.filter(
-                    (composant) => composant.idEmploye === employe.id
-                ).map((composant) => {
-                    const composantFondsDebits = fondsDebitsData.filter(
-                        (fondsDebit) => fondsDebit.idComposant === composant.id
-                    );
-                    return {
-                        ...composant,
-                        fondsDebits: composantFondsDebits,
-                        isEnabled: true // Ensure initial isEnabled state
-                    };
-                });
+    const handleCreateSimulation = async () => {
+        try {
+            console.log(newSimulationData);
+            const createdScenario = await copyData(selectedScenarioId, newSimulationData);
 
-                const totalSalaire = employeComposants
-                    .filter(composant => composant.isEnabled)
-                    .reduce((acc, composant) => acc + composant.salaire, 0);
-
-                return {
-                    ...employe,
-                    composants: employeComposants,
-                    salaire: totalSalaire,
-                    isEnabled: true // Ensure initial isEnabled state
-                };
-            });
-
-            setTreeData(employeeNodes);
-            setTotalCosts(calculateTotalCosts(employeeNodes));
+            refetch();
+            setSelectedScenarioId(createdScenario.id);
+            setIsDialogVisible(false);
+        } catch (error) {
+            console.error('Error in creating simulation:', error);
         }
-    }, [isSuccessEmployees, isSuccessComposants, isSuccessFondsDebits, employeesData, composantsData, fondsDebitsData, treeData]);
-
-
-    const onEmployeeDataChange = (updatedData) => {
-        setTreeData(updatedData);
     };
 
-    if (isLoadingEmployees || isLoadingComposants || isLoadingFondsDebits) {
-        return <div>Loading...</div>;
-    }
-
-    if (!treeData.length) {
-        return <div>Error loading data or no data available.</div>;
-    }
-
-    const progressBarValue = (totalCosts / 100000) * 100; // Calculate the percentage
+    if (isLoading) return <p>Loading...</p>;
+    if (isError) return <p>Error loading scenarios.</p>;
 
     return (
         <div>
-            <h1>Simulations</h1>
-            <div>
-                <ProgressBar value={progressBarValue} />
-                <p>Total Costs: {totalCosts}</p>
-            </div>
-            <SimulationEmployeeDataTable employees={treeData} onDataChanged={onEmployeeDataChange} />
+            <Button label="Select Simulation" onClick={() => setIsSidebarVisible(true)} />
+            <Sidebar visible={isSidebarVisible} onHide={() => setIsSidebarVisible(false)}>
+                {simulationScenarios.map(scenario => (
+                    <Button key={scenario.id} label={scenario.anneeFiscale} onClick={() => setSelectedScenarioId(scenario.id)} className="p-button-text" />
+                ))}
+                <Button label="Create New Simulation" onClick={() => setIsDialogVisible(true)} />
+            </Sidebar>
+
+            <Dialog header="Create New Simulation" visible={isDialogVisible} onHide={() => setIsDialogVisible(false)} style={{ width: '50vw' }}>
+                <div>
+                    <h3>New Scenario Details</h3>
+                    <InputText placeholder="Fiscal Year" value={newSimulationData.anneeFiscale} onChange={(e) => setNewSimulationData({ ...newSimulationData, anneeFiscale: e.target.value })} />
+                    <InputText placeholder="Description" value={newSimulationData.description} onChange={(e) => setNewSimulationData({ ...newSimulationData, description: e.target.value })} />
+
+                    <Dropdown value={copyFromScenarioId} options={allScenariosOptions} onChange={(e) => setCopyFromScenarioId(e.value)} placeholder="Select a Scenario to Copy From" />
+
+                    <Button label="Create" onClick={handleCreateSimulation} />
+                </div>
+            </Dialog>
+
+            {selectedScenarioId && <EmployeeDataTable idScenario={selectedScenarioId} simulation={true} />}
         </div>
     );
 };
 
-const calculateTotalCosts = (employees) => {
-    return employees
-        .filter(emp => emp.isEnabled)
-        .reduce((acc, emp) => acc + emp.salaire, 0);
-};
-
-export default SimulationsPage;
+export default SimulationPage;

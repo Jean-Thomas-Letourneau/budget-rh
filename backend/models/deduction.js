@@ -8,6 +8,7 @@ Deduction.init({
     nbSemaines: DataTypes.INTEGER,
     dateDebut: DataTypes.DATE,
     dateFin: DataTypes.DATE,
+    selected: DataTypes.BOOLEAN,
 }, { sequelize, modelName: 'deduction' });
 
 module.exports = Deduction;
