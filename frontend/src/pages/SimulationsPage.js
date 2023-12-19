@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Sidebar } from 'primereact/sidebar';
+import { ProgressBar } from 'primereact/progressbar'; // Import ProgressBar component
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -22,6 +23,8 @@ const SimulationPage = () => {
 
     const simulationScenarios = scenariosData?.filter(scenario => scenario.simulation === true) || [];
     const allScenariosOptions = scenariosData?.map(scenario => ({ label: scenario.anneeFiscale, value: scenario.id })) || [];
+
+    const [totalSalaire, setTotalSalaire] = useState(0);
 
     // Function to handle simulation selection and sidebar visibility
     const handleSimulationSelect = (id) => {
@@ -54,10 +57,13 @@ const SimulationPage = () => {
             <Button label="Select Simulation" onClick={() => setIsSidebarVisible(true)} />
             <Sidebar visible={isSidebarVisible} onHide={() => setIsSidebarVisible(false)}>
                 {simulationScenarios.map(scenario => (
-                    <Button key={scenario.id}
-                        label={scenario.anneeFiscale}
-                        onClick={() => handleSimulationSelect(scenario.id)}
-                        className="p-button-text" />
+                    <div>
+                        <Button key={scenario.id}
+                            label={scenario.anneeFiscale + " - " + scenario.description}
+                            onClick={() => handleSimulationSelect(scenario.id)}
+                            className="p-button-text" />
+                    </div>
+
                 ))}
                 <Button label="Create New Simulation" onClick={() => setIsDialogVisible(true)} />
             </Sidebar>
@@ -73,6 +79,14 @@ const SimulationPage = () => {
             </Dialog>
 
             {selectedScenarioId && <EmployeeDataTable idScenario={selectedScenarioId} simulation={true} />}
+
+            {selectedScenarioId && (
+                <div className="progress-section">
+                    <h4>Total Salaire for the selected scenario:</h4>
+                    <ProgressBar value={totalSalaire} showValue={true} />
+                    <p>{totalSalaire.toFixed(2)}</p>
+                </div>
+            )}
         </div>
     );
 };
